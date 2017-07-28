@@ -256,6 +256,19 @@ static void init_barrier_resource(rtapp_resource_t *data, const rtapp_options_t 
 	pthread_cond_init(&data->res.barrier.c_obj, NULL);
 }
 
+static void finalize_pthread_barrier_resource(rtapp_resource_t *data, const rtapp_options_t *opts)
+{
+	int err;
+	int thread_count = data->res.pthread_barrier.thread_ref_count;
+
+	log_info(PIN3 "Finalize: %s pthread_barrier %d threads", data->name, thread_count);
+
+	err = pthread_barrier_init(&data->res.pthread_barrier.obj, NULL, thread_count);
+	if (err) {
+		perror("pthread_barrier_init");
+	}
+}
+
 static void
 init_resource_data(const char *name, int type, rtapp_resources_t *resources_table,
 		int idx, const rtapp_options_t *opts)
@@ -286,6 +299,9 @@ init_resource_data(const char *name, int type, rtapp_resources_t *resources_tabl
 			break;
 		case rtapp_barrier:
 			init_barrier_resource(data, opts);
+			break;
+		case rtapp_pthread_barrier:
+			/* Init all done in finalize_resources */
 			break;
 		default:
 			break;
@@ -408,6 +424,23 @@ static int get_resource_index(const char *name, int type, rtapp_resources_t **re
 		i = add_resource_data(name, type, resources_table, opts);
 
 	return i;
+}
+
+static int finalize_resources(rtapp_options_t *opts)
+{
+	rtapp_resource_t *resources = opts->resources->resources;
+	int nresources = opts->resources->nresources;
+	int i;
+
+	for (i = 0; i < nresources; i++) {
+		switch (resources[i].type) {
+			case rtapp_pthread_barrier:
+				finalize_pthread_barrier_resource(&resources[i], opts);
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 static char* create_unique_name(char *tmp, int size, const char* ref, long tag)
@@ -560,21 +593,31 @@ parse_task_event_data(char *name, struct json_object *obj,
 		return;
 	}
 
-    if (!strncmp(name, "barrier", strlen("barrier"))) {
+	if (!strncmp(name, "barrier", strlen("barrier")) ||
+	    !strncmp(name, "pthread_barrier", strlen("pthread_barrier"))) {
+		int thread_count;
 
 		if (!json_object_is_type(obj, json_type_string))
 			goto unknown_event;
 
-		data->type = rtapp_barrier;
+		if (!strncmp(name, "barrier", strlen("barrier")))
+			data->type = rtapp_barrier;
+		else
+			data->type = rtapp_pthread_barrier;
 
 		ref = json_object_get_string(obj);
-		i = get_resource_index(ref, rtapp_barrier, resources_table, opts);
+		i = get_resource_index(ref, data->type, resources_table, opts);
 
 		data->res = i;
 		rdata = &((*resources_table)->resources[data->res]);
-		rdata->res.barrier.waiting += 1;
 
-		log_info(PIN2 "type %d target %s [%d] %d users so far", data->type, rdata->name, rdata->index, rdata->res.barrier.waiting);
+		if (data->type == rtapp_barrier)
+			thread_count = ++rdata->res.barrier.waiting;
+		else
+			thread_count = ++rdata->res.pthread_barrier.thread_ref_count;
+
+		log_info(PIN2 "type %d target %s [%d] %d users so far",
+			 data->type, rdata->name, rdata->index, thread_count);
 		snprintf(data->name, sizeof(data->name)-1, "%s:%s",
 			 name, rdata->name);
 		return;
@@ -733,6 +776,7 @@ static char *events[] = {
 	"yield",
 	"barrier",
 	"fork",
+	"pthread_barrier",
 	NULL
 };
 
@@ -1268,7 +1312,8 @@ get_opts_from_json_object(struct json_object *root, rtapp_options_t *opts)
 	parse_tasks(tasks, opts);
 	json_object_put(tasks);
 	log_info(PFX "Free json objects");
-
+	log_info(PFX "Finalize resources");
+	finalize_resources(opts);
 }
 
 void

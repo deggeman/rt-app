@@ -82,7 +82,8 @@ typedef enum resource_t
 	rtapp_runtime,
 	rtapp_yield,
 	rtapp_barrier,
-	rtapp_fork
+	rtapp_fork,
+	rtapp_pthread_barrier
 } resource_t;
 
 struct _rtapp_mutex {
@@ -107,6 +108,12 @@ struct _rtapp_barrier_like {
 	int waiting;
 	/* condvar to wait/signal on */
 	pthread_cond_t c_obj;
+};
+
+struct _rtapp_pthread_barrier {
+        pthread_barrier_t obj;
+        /* Number of threads that refer to this barrier */
+        int thread_ref_count;
 };
 
 struct _rtapp_signal {
@@ -145,6 +152,7 @@ typedef struct _rtapp_resource_t {
 		struct _rtapp_iodev dev;
 		struct _rtapp_barrier_like barrier;
 		struct _rtapp_fork fork;
+		struct _rtapp_pthread_barrier pthread_barrier;
 	} res;
 	int index;
 	resource_t type;
