@@ -256,6 +256,13 @@ static void init_barrier_resource(rtapp_resource_t *data, const rtapp_options_t 
 	pthread_cond_init(&data->res.barrier.c_obj, NULL);
 }
 
+static void init_pthread_barrier_resource(rtapp_resource_t *data, const rtapp_options_t *opts)
+{
+	log_info(PIN3 "Init: %s pthread_barrier", data->name);
+
+	data->res.pthread_barrier.thread_ref_count = 0;
+}
+
 static void finalize_pthread_barrier_resource(rtapp_resource_t *data, const rtapp_options_t *opts)
 {
 	int err;
@@ -301,7 +308,7 @@ init_resource_data(const char *name, int type, rtapp_resources_t *resources_tabl
 			init_barrier_resource(data, opts);
 			break;
 		case rtapp_pthread_barrier:
-			/* Init all done in finalize_resources */
+			init_pthread_barrier_resource(data, opts);
 			break;
 		default:
 			break;
