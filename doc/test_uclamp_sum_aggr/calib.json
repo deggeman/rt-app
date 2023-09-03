@@ -1,0 +1,48 @@
+{
+	"tasks" : {
+		"task0" : {
+			"cpus" : [ 0 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique0" }
+		},
+		"task1" : {
+			"cpus" : [ 1 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique1" }
+		},
+		"task2" : {
+			"cpus" : [ 2 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique2" }
+		},
+		"task3" : {
+			"cpus" : [ 3 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique3" }
+		},
+		"task4" : {
+			"cpus" : [ 4 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique4" }
+		},
+		"task5" : {
+			"cpus" : [ 5 ],
+			"loop" : 100,
+			"run" :  8000,
+			"timer" : { "period" : 16000, "ref" : "unique5" }
+		}
+
+	},
+	"global" : {
+		"calibration" : "CPU2",
+		"default_policy" : "SCHED_OTHER",
+		"pi_enabled" : false,
+		"logdir" : "/tmp/",
+		"duration" : -1
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"tasks" : {
+		"task_B" : {
+			"instance" : 4,
+			"run" :  9000,
+			"timer" : { "period" : 16000, "ref" : "uniqueB" },
+			"taskgroup" : "/A/B",
+			"util_max" : 200
+		},
+		"task_L" : {
+			"instance" : 2,
+			"run" :  1000,
+			"timer" : { "period" : 16000, "ref" : "uniqueL" },
+			"taskgroup" : "/A/B",
+			"util_min" : 800
+		}
+	},
+	"global" : {
+		"calibration" : 160,
+		"default_policy" : "SCHED_OTHER",
+		"pi_enabled" : false,
+		"logdir" : "/tmp/",
+		"duration" : 3
+	}
+}
